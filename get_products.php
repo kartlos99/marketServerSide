@@ -9,9 +9,21 @@ if(isset($_GET["filter_text"]) && $_GET["filter_text"]!=""){
 }
 
 $sql="
-SELECT p.id, typeID, name, dt.valueText AS prod, dg.valueText AS gr, dt.comment AS img FROM `products` p
-LEFT JOIN dictionaryitems dt ON p.typeID = dt.id
-LEFT JOIN dictionaryitems dg ON p.`groupNameID` = dg.id
+SELECT
+    p.id,
+    typeID,
+    p.NAME,
+    pt.name AS prod,
+    pg.name AS gr,
+    p.image AS p_img,
+    pt.image as pt_img,
+    pg.image as pg_img
+FROM
+    `products` p
+LEFT JOIN producttype pt ON
+    p.typeID = pt.id
+LEFT JOIN productgr pg ON
+    pt.grID = pg.id
 
 ";
 $arr = [];
