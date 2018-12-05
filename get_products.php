@@ -136,12 +136,51 @@ if (!$result){
     }
 }
 
+// ***********  mogvaqvs yvela brendi  ***************
+$sql = "
+SELECT id, brandName, brandNameEng FROM `brands`
+ORDER by brandName";
+
+$result = mysqli_query($conn, $sql);
+$brands_arr = [];
+
+if (!$result){
+    die("SQL Error:\n" . $sql);
+}else{
+    if (mysqli_num_rows($result) > 0) {
+        foreach($result as $row){
+            $brands_arr[] = $row;
+        }
+    }
+}
+
+// ***********  mogvaqvs yvela magazia  ***************
+$sql = "
+SELECT `id`, `marketName`, `marketNameEng`, `sn`, `logo`, `image`, `address`, `locationX`, `locationY`, `comment` FROM `markets` 
+ORDER BY `marketName`";
+
+$result = mysqli_query($conn, $sql);
+$markets_arr = [];
+
+if (!$result){
+    die("SQL Error:\n" . $sql);
+}else{
+    if (mysqli_num_rows($result) > 0) {
+        foreach($result as $row){
+            $markets_arr[] = $row;
+        }
+    }
+}
+
+
 // ********* productebi, parametrebi, shefutvis tipebi
 // ********* yvela ertad mogvaqvs  *******************
 
 $fulldata[] = $arr;
 $fulldata[] = $p_arr;
 $fulldata[] = $pack_arr;
+$fulldata[] = $brands_arr;
+$fulldata[] = $markets_arr;
 
 echo json_encode($fulldata);
 
