@@ -36,6 +36,9 @@ LEFT JOIN brands b ON
     rp.brandID = b.id
 LEFT JOIN dictionaryitems di ON
     rp.packingID = di.id
+LEFT JOIN states s ON
+	rp.statusID = s.ID
+WHERE s.Code = 'active'    
 ";
 
 if ($filter_text != ""){

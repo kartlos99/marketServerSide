@@ -25,7 +25,8 @@ LEFT JOIN producttype pt ON
     p.typeID = pt.id
 LEFT JOIN productgr pg ON
     pt.grID = pg.id
-
+LEFT JOIN states s ON p.statusID = s.ID
+WHERE s.Code = 'active'
 ";
 
 // **********  romel products ra parametrebi aqvs  *********
@@ -138,7 +139,9 @@ if (!$result){
 
 // ***********  mogvaqvs yvela brendi  ***************
 $sql = "
-SELECT id, brandName, brandNameEng FROM `brands`
+SELECT b.id, brandName, brandNameEng FROM `brands` b
+LEFT JOIN states s ON b.statusID = s.ID
+WHERE s.Code = 'active'
 ORDER by brandName";
 
 $result = mysqli_query($conn, $sql);
@@ -156,7 +159,9 @@ if (!$result){
 
 // ***********  mogvaqvs yvela magazia  ***************
 $sql = "
-SELECT `id`, `marketName`, `marketNameEng`, `sn`, `logo`, `image`, `address`, `locationX`, `locationY`, `comment` FROM `markets` 
+SELECT m.`id`, `marketName`, `marketNameEng`, `sn`, `logo`, `image`, `address`, `locationX`, `locationY`, m.`comment` FROM `markets` m
+LEFT JOIN states s ON m.statusID = s.ID
+WHERE s.Code = 'active'
 ORDER BY `marketName`";
 
 $result = mysqli_query($conn, $sql);
