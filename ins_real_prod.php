@@ -2,8 +2,6 @@
 
 include_once 'config.php';
 
-
-
 // die (print_r($_POST));
 $prod_id = $_POST["prod_id"];
 $comment = $_POST["comment"];
@@ -70,10 +68,20 @@ VALUES(
 ";
 // die($sql);
 $result = mysqli_query($conn, $sql);
+$return["id"]=0;
+$return["error"]="";
 
 if ($result){
     $realPrID = mysqli_insert_id($conn);
-    echo $realPrID;
+    $return["id"] = $realPrID;
+    // echo $realPrID;
+
+    if (isset($_POST["image"])){
+        $image = $_POST["image"];
+        $image_name = $realPrID;
+        $upload_path = "images/$image_name.jpg";
+        file_put_contents($upload_path, base64_decode($image));
+    }    
 
     if ($arr_pID != null){
         $paramSql = "INSERT INTO `paramvalue`(`realProdID`, `paramID`, `value`)
@@ -91,16 +99,16 @@ if ($result){
         $paramSql .= $paramInsBody;
     
         if (mysqli_query($conn, $paramSql) !== true){
-            echo 0;
+            $return["error"] = "parametrebis mnishvneloba ar chaiwera!";
         };
     }
     
 }else{
-    echo 0;
+    $return["error"] = "chawers problema!";
 }
 
 
-// echo json_encode($_POST);
+echo json_encode($return);
 
 
 ?>
