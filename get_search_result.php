@@ -17,17 +17,47 @@ SELECT
     rp.`brandID`,
     rp.`country`,
     rp.`packingID`,
-    rp.`image`,
-    ifnull(rp.`comment`, '') AS comment,
+    IFNULL(rp.`comment`, '') AS comment,
     rp.`createDate`,
     rp.`createUserID`,
     p.name AS product_name,
+    rpid.allvalue,
+    rp.`image`,
     p.image AS p_image,
-    ifnull(m.marketName, '') AS marketName,
-    ifnull(b.brandName, '') AS brandName,
-    ifnull(di.valueText, '') AS packing
+    IFNULL(m.marketName, '') AS marketName,
+    IFNULL(b.brandName, '') AS brandName,
+    IFNULL(di.valueText, '') AS packing
 FROM
-    `realproducts` rp
+    (
+    SELECT
+        MAX(rp.`id`) AS rp_id,
+        allvalue
+    FROM
+        `realproducts` rp
+    LEFT JOIN states s ON
+        rp.statusID = s.ID
+    LEFT JOIN(
+        SELECT
+            `realProdID`,
+            GROUP_CONCAT( CONCAT(`paramID`, '-', `value`) SEPARATOR '|' ) AS allvalue
+        FROM
+            `paramvalue`
+        GROUP BY
+            realProdID
+    ) pv
+ON
+    rp.id = pv.realProdID
+WHERE
+    s.Code = 'active'
+GROUP BY
+    marketID,
+    productID,
+    allvalue
+ORDER BY
+    rp_id
+) rpid
+LEFT JOIN `realproducts` rp ON
+    rpid.rp_id = rp.id
 LEFT JOIN products p ON
     rp.productID = p.id
 LEFT JOIN markets m ON
@@ -36,14 +66,18 @@ LEFT JOIN brands b ON
     rp.brandID = b.id
 LEFT JOIN dictionaryitems di ON
     rp.packingID = di.id
-LEFT JOIN states s ON
-	rp.statusID = s.ID
-WHERE s.Code = 'active'    
 ";
 
 if ($filter_text != ""){
-    $sql .= "WHERE p.name LIKE '$filter_text%'";
+    $filter_text = str_replace(" ", "%", $filter_text);
+    $sql .= "WHERE CONCAT(p.name, ' ', IFNULL(b.brandName, ''), ' ', allvalue, ' ', IFNULL(m.marketName, '')) LIKE '%$filter_text%'";
 }
+
+$order = "ORDER BY
+marketID,
+id DESC";
+
+$sql .= $order;
 
 $sql_param = "
 SELECT pv.`id`, pv.`realProdID`, pv.`paramID`, pv.`value`, p.name FROM `paramvalue` pv LEFT JOIN paramiters p ON pv.`paramID` = p.id ORDER by `realProdID`, `paramID`
@@ -97,6 +131,5 @@ if (!$result){
 }
 
 echo json_encode ($rp_arr);
-
 
 ?>

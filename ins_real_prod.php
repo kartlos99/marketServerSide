@@ -83,7 +83,7 @@ if ($result){
         file_put_contents($upload_path, base64_decode($image));
     }    
 
-    if ($arr_pID != null){
+    if ($prod_id != 0){
         $paramSql = "INSERT INTO `paramvalue`(`realProdID`, `paramID`, `value`)
         VALUES ";
     
