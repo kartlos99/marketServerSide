@@ -14,11 +14,8 @@ SELECT
     p.id,
     typeID,
     p.name,
-    pt.name AS type,
-    pg.name AS gr,
     p.image AS p_img,
-    pt.image as pt_img,
-    pg.image as pg_img
+    pt.image as pt_img
 FROM
     `products` p
 LEFT JOIN producttype pt ON

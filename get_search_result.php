@@ -3,9 +3,15 @@
 include_once 'config.php';
 
 $filter_text="";
+$limit = 30;
+$qrcode = "";
+$rp_arr = [];
 
 if(isset($_GET["filter_text"]) && $_GET["filter_text"]!=""){
     $filter_text = $_GET["filter_text"];
+}
+if(isset($_GET["qrcode"]) && $_GET["qrcode"]!=""){
+    $qrcode = $_GET["qrcode"];
 }
 
 $sql = "
@@ -31,7 +37,7 @@ FROM
     (
     SELECT
         MAX(rp.`id`) AS rp_id,
-        allvalue
+        ifNULL(pv.allval, '') AS allvalue
     FROM
         `realproducts` rp
     LEFT JOIN states s ON
@@ -39,7 +45,7 @@ FROM
     LEFT JOIN(
         SELECT
             `realProdID`,
-            GROUP_CONCAT( CONCAT(`paramID`, '-', `value`) SEPARATOR '|' ) AS allvalue
+            GROUP_CONCAT( CONCAT(`paramID`, '-', `value`) SEPARATOR '|' ) AS allval
         FROM
             `paramvalue`
         GROUP BY
@@ -70,17 +76,26 @@ LEFT JOIN dictionaryitems di ON
 
 if ($filter_text != ""){
     $filter_text = str_replace(" ", "%", $filter_text);
-    $sql .= "WHERE CONCAT(p.name, ' ', IFNULL(b.brandName, ''), ' ', allvalue, ' ', IFNULL(m.marketName, '')) LIKE '%$filter_text%'";
+    $sql .= "WHERE CONCAT(p.name, ' ', IFNULL(b.brandName, ''), ' ', allvalue, ' ', IFNULL(m.marketName, '')) LIKE '%$filter_text%' ";
+}
+if ($qrcode != ""){
+    // e.i. qrcodi gvaqvs gadmocemuli
+    $sql .= "WHERE p.qrcode = '$qrcode' ";
 }
 
 $order = "ORDER BY
 marketID,
 id DESC";
 
-$sql .= $order;
+$sql .= $order . " limit $limit";
+
+// die($sql);
 
 $sql_param = "
-SELECT pv.`id`, pv.`realProdID`, pv.`paramID`, pv.`value`, p.name FROM `paramvalue` pv LEFT JOIN paramiters p ON pv.`paramID` = p.id ORDER by `realProdID`, `paramID`
+SELECT pv.`id`, pv.`realProdID`, pv.`paramID`, pv.`value`, p.name 
+FROM `paramvalue` pv 
+LEFT JOIN paramiters p ON pv.`paramID` = p.id 
+ORDER by `realProdID`, `paramID`
 ";
 
 $result_P = $conn->query($sql_param);
@@ -107,7 +122,6 @@ if (!$result_P){
 }
 
 $result = mysqli_query($conn, $sql);
-$rp_arr = [];
 
 if (!$result){
     die("SQL Error:\n" . $sql);
