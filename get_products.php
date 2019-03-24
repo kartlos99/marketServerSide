@@ -13,88 +13,76 @@ $sql="
 SELECT
     p.id,
     typeID,
+    p.qrcode as qr,
     p.name,
+    p.packingID as packID,
     p.image AS p_img,
-    pt.image as pt_img
+    p.brandID AS brID
 FROM
     `products` p
 LEFT JOIN producttype pt ON
     p.typeID = pt.id
 LEFT JOIN productgr pg ON
     pt.grID = pg.id
-LEFT JOIN states s ON p.statusID = s.ID
+LEFT JOIN states s ON 
+	p.statusID = s.ID
 WHERE s.Code = 'active'
 ";
 
-// **********  romel products ra parametrebi aqvs  *********
-$sql_P = "
-SELECT * FROM `prodvsparam` 
-ORDER by `prodTypeID`";
+// *********** titoeul produqts tavisi parametrebis mnishvnelobebs vanichebt *******
+$sql_param = "
+SELECT pv.`id`, pv.`prodID`, pv.`paramID`, pv.`value`, p.name 
+FROM `paramvalue` pv 
+LEFT JOIN paramiters p ON pv.`paramID` = p.id 
+ORDER by `prodID`, `paramID`
+";
 
-// **********  romel products ra shefutvis tipi aqvs  *********
-$sql_Pack = "
-SELECT `prodTypeID`, p.packingID, valuetext FROM `prodvspack` p
-LEFT JOIN dictionaryitems d on p.packingID = d.id
-ORDER by prodTypeID, d.sortID";
-
-$result = $conn->query($sql);
-$result_P = $conn->query($sql_P);
-$result_Pack = $conn->query($sql_Pack);
- 
-$arr = [];
+$result_P = $conn->query($sql_param);
 $arr_p = [];
-$arr_pack = [];
+$arr_pVal = [];
+$arr_pName = [];
 
 if (!$result_P){
-    die("SQL Error:\n" . $sql_P);
+    die("SQL Error:\n" . $sql_param);
 }else{
 	if (mysqli_num_rows($result_P) > 0) {
         foreach($result_P as $row){            
-            $typeID = $row["prodTypeID"];            
-            if (!isset($arr_p[$typeID])){                
-                $arr_p[$typeID] = [];                
+            $rpID = $row["prodID"];            
+            if (!isset($arr_p[$rpID])){                
+                $arr_p[$rpID] = [];
+                $arr_pVal[$rpID] = [];
+                $arr_pName[$rpID] = [];             
             }
-            array_push($arr_p[$typeID], $row["paramID"]);            
+            array_push($arr_p[$rpID], $row["paramID"]);
+            array_push($arr_pVal[$rpID], $row["value"]);
+            array_push($arr_pName[$rpID], $row["name"]);
         }
     }
 }
 
-if (!$result_Pack){
-    die("SQL Error:\n" . $sql_Pack);
-}else{
-    if (mysqli_num_rows($result_Pack) > 0) {
-        foreach($result_Pack as $row){            
-            $typeID = $row["prodTypeID"];            
-            if (!isset($arr_pack[$typeID])){                
-                $arr_pack[$typeID] = [];                
-            }
-            array_push($arr_pack[$typeID], $row["packingID"]);            
-        }
-    }
-}
+$result = $conn->query($sql);
+ 
+$arr = [];
 
-//  *****  titoeul produqs vabamt tavis dasashveb 
-//  *****  paramerebs da shefutvis tipebs  ******
+
+//  *****  titoeul produqs vabamt tavis  ***********
+//  *****  parameris mnishvnelobebs  ******
 if (!$result){
     die("SQL Error:\n" . $sql);
 }else{
 	if (mysqli_num_rows($result) > 0) {
     
         foreach($result as $row){
-            $tp = $row["typeID"];
-            if (isset($arr_p[$tp])){
-                $row["param"] = $arr_p[$tp];
+            $productID = $row["id"];
+            if (isset($arr_pVal[$productID])){
+                $row["pVal"] = $arr_pVal[$productID];
+                $row["pID"] = $arr_p[$productID];
             }else{
-                $row["param"] = [];
+                $row["pVal"] = [];
+                $row["pID"] = [];
             }       
 
-            if (isset($arr_pack[$tp])){
-                $row["packs"] = $arr_pack[$tp];
-            }else{
-                $row["packs"] = [];
-            }       
-                     
-        	$arr[] = $row;
+            $arr[] = $row;
         }
     }
 }
@@ -174,6 +162,87 @@ if (!$result){
     }
 }
 
+// **********  romel products ra parametrebi aqvs  *********
+$sql_allparam = "
+SELECT * FROM `prodvsparam` 
+ORDER by `prodTypeID`";
+
+// **********  romel products ra shefutvis tipi aqvs  *********
+$sql_allPack = "
+SELECT `prodTypeID`, p.packingID, valuetext FROM `prodvspack` p
+LEFT JOIN dictionaryitems d on p.packingID = d.id
+ORDER by prodTypeID, d.sortID";
+
+$result_allParam = $conn->query($sql_allparam);
+$result_allPack = $conn->query($sql_allPack);
+
+$arr_allparam = [];
+$arr_allpack = [];
+
+if (!$result_allParam){
+    die("SQL Error:\n" . $sql_allparam);
+}else{
+	if (mysqli_num_rows($result_allParam) > 0) {
+        foreach($result_allParam as $row){            
+            $typeID = $row["prodTypeID"];            
+            if (!isset( $arr_allparam[ $typeID ] )){                
+                $arr_allparam[$typeID] = [];                
+            }
+            array_push($arr_allparam[$typeID], $row["paramID"]);            
+        }
+    }
+}
+
+if (!$result_allPack){
+    die("SQL Error:\n" . $sql_allPack);
+}else{
+    if (mysqli_num_rows($result_allPack) > 0) {
+        foreach($result_allPack as $row){            
+            $typeID = $row["prodTypeID"];            
+            if (!isset($arr_allpack[$typeID])){                
+                $arr_allpack[$typeID] = [];                
+            }
+            array_push($arr_allpack[$typeID], $row["packingID"]);            
+        }
+    }
+}
+
+$sql_allprodtypes = "SELECT
+`id`,
+`code`,
+`name`,
+`image`
+FROM
+`producttype`
+WHERE
+`isActive` = 1
+ORDER BY
+`sortID`, `id`";
+
+$result_allprType = $conn->query($sql_allprodtypes);
+$prType_arr = [];
+
+if (!$result_allprType){
+    die("SQL Error:\n" . $sql_allprodtypes);
+} else {
+    if (mysqli_num_rows($result_allprType) > 0) {
+        foreach($result_allprType as $row){
+            $prTypeID = $row["id"];
+            if (isset($arr_allparam[ $prTypeID ])){
+                $row["all_param"] = $arr_allparam[ $prTypeID ];                
+            }else{
+                $row["all_param"] = [];
+            }
+            if (isset($arr_allpack[ $prTypeID ])){
+                $row["all_pack"] = $arr_allpack[ $prTypeID ];                
+            }else{
+                $row["all_pack"] = [];
+            }
+               
+            $prType_arr[] = $row;
+        }
+    }
+}
 
 // ********* productebi, parametrebi, shefutvis tipebi
 // ********* yvela ertad mogvaqvs  *******************
@@ -183,6 +252,7 @@ $fulldata[] = $p_arr;
 $fulldata[] = $pack_arr;
 $fulldata[] = $brands_arr;
 $fulldata[] = $markets_arr;
+$fulldata[] = $prType_arr;
 
 echo json_encode($fulldata);
 
