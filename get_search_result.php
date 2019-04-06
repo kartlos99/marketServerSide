@@ -6,12 +6,16 @@ $filter_text="";
 $limit = 30;
 $qrcode = "";
 $rp_arr = [];
+$myIDs = "";
 
 if(isset($_GET["filter_text"]) && $_GET["filter_text"]!=""){
     $filter_text = $_GET["filter_text"];
 }
 if(isset($_GET["qrcode"]) && $_GET["qrcode"]!=""){
     $qrcode = $_GET["qrcode"];
+}
+if(isset($_GET["myIDs"]) && $_GET["myIDs"]!=""){
+    $myIDs = $_GET["myIDs"];
 }
 
 $sql = "
@@ -77,6 +81,32 @@ marketID,
 id DESC";
 
 $sql .= $order . " limit $limit";
+
+if ($myIDs != ""){
+    // mimaqvs chemi momxmareblis listshi arsebuli realuri produqtebi. 
+    // sheidzleba ufro axali Canaweric iyos am magazia->productze
+    // magram rac gviweria is migvaqvs.
+    // ****** mere mosafiqrebelia ufro axali infos gamotana ********
+    $sql = "
+    SELECT
+        rp.`id`,
+        rp.`productID`,
+        rp.`marketID`,
+        rp.`price`,
+        IFNULL(rp.`comment`, '') AS COMMENT,
+        rp.`createDate`,
+        rp.`createUserID`,
+        rp.`image`,
+        p.image AS p_image,
+        IFNULL(m.marketName, '') AS marketName
+    FROM
+        `realproducts` rp        
+    LEFT JOIN products p ON
+        rp.productID = p.id
+    LEFT JOIN markets m ON
+        rp.marketID = m.id
+    WHERE rp.id IN ($myIDs) ";
+}
 
 // die($sql);
 
